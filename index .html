@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RF Match">
+<title>RF Match Calculator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f2f2f7;color:#111827}
+main{max-width:520px;margin:auto;padding:calc(18px + env(safe-area-inset-top)) 18px 28px}
+h1{font-size:30px;margin:8px 0 4px}.sub{color:#6b7280;margin-bottom:20px}
+.card{background:white;border-radius:20px;padding:18px;margin:12px 0;box-shadow:0 2px 10px #0000000d}
+label{display:block;font-weight:700;margin:12px 0 7px}
+input{width:100%;font-size:24px;padding:14px;border:1px solid #d1d5db;border-radius:12px;background:#fff}
+button{width:100%;border:0;border-radius:14px;padding:15px;font-size:19px;font-weight:700;background:#111827;color:white;margin-top:16px}
+.secondary{background:#e5e7eb;color:#111827}
+.result{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.box{background:#f3f4f6;border-radius:14px;padding:14px}.box .name{font-size:13px;color:#6b7280}.box .value{font-size:24px;font-weight:800;margin-top:3px}
+.vswr{grid-column:1/-1;background:#111827;color:white}.vswr .name{color:#d1d5db}.vswr .value{font-size:38px}
+.note{font-size:13px;color:#6b7280;line-height:1.45;margin-top:16px}
+</style>
+</head>
+<body>
+<main>
+<h1>RF Match Calculator</h1>
+<div class="sub">Forward & reflected power → Γ, VSWR and delivered power</div>
+
+<div class="card">
+<label for="forward">Forward Power (W)</label>
+<input id="forward" type="number" inputmode="decimal" min="0" step="0.1" value="0">
+
+<label for="reflected">Reflected Power (W)</label>
+<input id="reflected" type="number" inputmode="decimal" min="0" step="0.1" value="0">
+
+<button onclick="calculate()">Calculate</button>
+<button class="secondary" onclick="clearAll()">Clear</button>
+</div>
+
+<div class="card">
+<div class="result">
+<div class="box vswr"><div class="name">VSWR</div><div class="value" id="vswr">—</div></div>
+<div class="box"><div class="name">Reflection coefficient Γ</div><div class="value" id="gamma">—</div></div>
+<div class="box"><div class="name">Reflected power</div><div class="value" id="pct">—</div></div>
+<div class="box"><div class="name">Delivered power</div><div class="value" id="delivered">—</div></div>
+<div class="box"><div class="name">Return loss</div><div class="value" id="rl">—</div></div>
+<div class="box"><div class="name">Power ratio</div><div class="value" id="ratio">—</div></div>
+</div>
+<div class="note">
+Uses Γ = √(Pr/Pf), VSWR = (1+|Γ|)/(1−|Γ|), return loss = −20 log10(|Γ|), and delivered power = Pf − Pr.
+<br><br>
+Measurements should be made at the same point in the transmission line. Values with reflected power greater than or equal to forward power are flagged as invalid for this calculation.
+</div>
+</div>
+</main>
+<script>
+function fmt(x,n=3){return Number.isFinite(x)?x.toFixed(n):"—"}
+function calculate(){
+ const pf=parseFloat(document.getElementById("forward").value);
+ const pr=parseFloat(document.getElementById("reflected").value);
+ if(!Number.isFinite(pf)||!Number.isFinite(pr)||pf<=0||pr<0||pr>=pf){
+   alert("Enter valid values: forward power must be greater than 0 W, and reflected power must be less than forward power.");
+   return;
+ }
+ const g=Math.sqrt(pr/pf);
+ const swr=(1+g)/(1-g);
+ const pct=100*pr/pf;
+ const del=pf-pr;
+ const rl=-20*Math.log10(g);
+ document.getElementById("vswr").textContent=fmt(swr,2)+":1";
+ document.getElementById("gamma").textContent=fmt(g,4);
+ document.getElementById("pct").textContent=fmt(pct,2)+"%";
+ document.getElementById("delivered").textContent=fmt(del,1)+" W";
+ document.getElementById("rl").textContent=(g===0?"∞":fmt(rl,2))+" dB";
+ document.getElementById("ratio").textContent=fmt(pf/pr,2)+" : 1";
+}
+function clearAll(){
+ ["forward","reflected"].forEach(id=>document.getElementById(id).value="0");
+ ["vswr","gamma","pct","delivered","rl","ratio"].forEach(id=>document.getElementById(id).textContent="—");
+}
+
+window.addEventListener("pageshow", function(){
+ document.getElementById("forward").value="0";
+ document.getElementById("reflected").value="0";
+ ["vswr","gamma","pct","delivered","rl","ratio"].forEach(id=>document.getElementById(id).textContent="—");
+});
+
+</script>
+</body>
+</html>
