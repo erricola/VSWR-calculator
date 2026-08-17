@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#04101f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RF Match">
+<title>RF Match Calculator</title>
+<link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+<style>
+:root{--blue:#168cff;--cyan:#58bfff;--panel:#07111e}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#eef2f6;color:#0a0f15}
+main{width:min(100%,760px);margin:auto;padding-bottom:28px}
+.header{background:linear-gradient(180deg,#061427,#020c18);border-bottom:1px solid #2a5a85;padding:calc(18px + env(safe-area-inset-top)) 14px 14px;text-align:center}
+.header h1{margin:0;color:#fff;font-size:clamp(27px,5.7vw,44px);line-height:1.02;font-weight:900}
+.header .sub{color:#58b8ff;margin-top:7px;font-size:clamp(14px,3.5vw,22px);font-weight:700}
+.wrap{padding:12px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#fff;border-radius:16px;padding:12px;box-shadow:0 2px 10px #00000010}
+.field label,.select-field label{display:block;font-weight:850;font-size:clamp(13px,3.2vw,18px);margin:0 0 5px}
+.field input,.select-field input,.select-field select{width:100%;border:1.5px solid #bcc7d1;border-radius:12px;font-size:clamp(22px,6vw,34px);font-weight:800;padding:9px 10px;text-align:center;background:#fff;min-height:52px}
+.button-row{grid-column:1/-1;display:grid;grid-template-columns:1.25fr .75fr;gap:10px}
+button{border:0;border-radius:12px;padding:12px 8px;min-height:50px;font-size:clamp(16px,4vw,23px);font-weight:900}
+.calc{background:linear-gradient(180deg,#0e65d8,#06489c);color:#fff}
+.clear{background:linear-gradient(180deg,#9da5ad,#737b84);color:#fff}
+
+.meter-card{margin-top:12px;border-radius:24px;padding:10px;background:radial-gradient(circle at 50% 10%,#0a294a 0%,#061425 45%,#020a13 100%);border:2px solid #0d5aa6;box-shadow:inset 0 0 0 2px #3db3ff,inset 0 0 22px #0f67b855,0 3px 10px #0003}
+.meter-shell{position:relative;border-radius:20px;background:linear-gradient(180deg,#050d16,#0b1218);border:2px solid #566879;padding:8px 8px 12px;overflow:hidden}
+.meter-svg{display:block;width:100%;height:auto}
+.digital-main{width:min(58%,360px);margin:-4px auto 2px;background:linear-gradient(180deg,#071b30,#030a11);border:2px solid var(--blue);border-radius:14px;text-align:center;padding:4px 8px 8px;box-shadow:inset 0 0 14px #0e67b733}
+.digital-main .label{color:#3aa8ff;font-size:clamp(16px,4vw,25px);font-weight:900}
+.digital-main .value{color:#fff;font-size:clamp(34px,9vw,62px);font-weight:950;line-height:1.02;white-space:nowrap}
+
+.results{margin-top:12px;background:var(--panel);border-radius:20px;padding:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.result-box{min-width:0;background:linear-gradient(180deg,#091828,#06111e);border:1.5px solid #405a72;border-radius:14px;padding:10px 7px;text-align:center;box-shadow:inset 0 0 10px #0c4e8230}
+.result-box .name{color:#69c4ff;font-size:clamp(12px,3.2vw,17px);font-weight:800;line-height:1.15;min-height:30px;display:flex;align-items:center;justify-content:center;overflow-wrap:anywhere}
+.result-box .value{color:#fff;font-size:clamp(24px,7vw,38px);line-height:1.03;font-weight:950;margin-top:4px;white-space:normal;overflow-wrap:anywhere}
+.result-box .subvalue{color:#fff;font-size:clamp(11px,2.9vw,16px);font-weight:700;margin-top:2px}
+.results .result-box:last-child{grid-column:1/-1}
+
+.feed{margin-top:12px;background:#fff;border:1px solid #b8c3cf;border-radius:18px;padding:12px}
+.feed-title{font-size:clamp(18px,4.7vw,27px);font-weight:900;margin:0 0 10px}
+.feed-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.select-field input,.select-field select{font-size:clamp(18px,5vw,28px);min-height:48px}
+.loss-box{grid-column:1/-1;border:1.5px solid #54a8ff;background:#eaf5ff;border-radius:12px;padding:10px;text-align:center}
+.loss-box .name{font-weight:800;font-size:14px}
+.loss-box .value{font-weight:950;font-size:30px;margin-top:2px}
+.note{margin-top:12px;background:#e5f2ff;border:1px solid #8ac4ff;color:#14335d;border-radius:14px;padding:11px 12px;font-size:13px;line-height:1.35}
+.hidden{display:none}
+@media(min-width:640px){
+  .wrap{padding:16px}
+  .controls{grid-template-columns:1fr 1fr 1.2fr .8fr;align-items:end}
+  .button-row{grid-column:auto;display:contents}
+  .results{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .results .result-box:last-child{grid-column:auto}
+  .feed-grid{grid-template-columns:1.2fr .8fr 1fr 1fr;align-items:end}
+  .loss-box{grid-column:auto}
+}
+</style>
+</head>
+<body>
+<main>
+<div class="header">
+  <h1>RF MATCH CALCULATOR</h1>
+  <div class="sub">Forward &amp; Reflected Power → VSWR &amp; Match Analysis</div>
+</div>
+
+<div class="wrap">
+<section class="controls">
+  <div class="field">
+    <label for="forward">Forward Power (W)</label>
+    <input id="forward" type="number" inputmode="decimal" min="0" step="0.1" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)">
+  </div>
+  <div class="field">
+    <label for="reflected">Reflected Power (W)</label>
+    <input id="reflected" type="number" inputmode="decimal" min="0" step="0.1" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)">
+  </div>
+  <div class="button-row">
+    <button class="calc" onclick="calculate()">CALCULATE</button>
+    <button class="clear" onclick="resetAll()">CLEAR</button>
+  </div>
+</section>
+
+<section class="meter-card">
+<div class="meter-shell">
+<svg class="meter-svg" viewBox="0 0 700 370" role="img" aria-label="SWR analog meter">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="2.8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+
+  <!-- SWR scale: 1.0 to 5.0 -->
+  <path d="M142.2 180.2 A245 245 0 0 1 181.4 132.3" fill="none" stroke="#25b94d" stroke-width="13" stroke-linecap="butt"/>
+  <path d="M181.4 132.3 A245 245 0 0 1 350.0 65.0" fill="none" stroke="#ffd51f" stroke-width="13" stroke-linecap="butt"/>
+  <path d="M350.0 65.0 A245 245 0 0 1 557.8 180.2" fill="none" stroke="#ff3d31" stroke-width="13" stroke-linecap="butt"/>
+
+  <!-- Major ticks every 0.5 -->
+  <g stroke="#fff" stroke-width="5">
+    <line x1="139.7" y1="178.6" x2="166.0" y2="195.0"/>
+    <line x1="179.3" y1="130.1" x2="200.6" y2="152.6"/>
+    <line x1="229.8" y1="93.1" x2="244.8" y2="120.2"/>
+    <line x1="287.9" y1="69.9" x2="295.7" y2="99.9"/>
+    <line x1="350.0" y1="62.0" x2="350.0" y2="93.0"/>
+    <line x1="412.1" y1="69.9" x2="404.3" y2="99.9"/>
+    <line x1="470.2" y1="93.1" x2="455.2" y2="120.2"/>
+    <line x1="520.7" y1="130.1" x2="499.4" y2="152.6"/>
+    <line x1="560.3" y1="178.6" x2="534.0" y2="195.0"/>
+  </g>
+
+  <!-- Minor ticks every 0.25 -->
+  <g stroke="#e8f5ff" stroke-width="2.6">
+    <line x1="159.5" y1="154.4" x2="173.4" y2="165.7"/>
+    <line x1="204.5" y1="111.6" x2="215.2" y2="126.1"/>
+    <line x1="258.8" y1="81.5" x2="265.5" y2="98.2"/>
+    <line x1="319.0" y1="66.0" x2="321.2" y2="83.8"/>
+    <line x1="381.0" y1="66.0" x2="378.8" y2="83.8"/>
+    <line x1="441.2" y1="81.5" x2="434.5" y2="98.2"/>
+    <line x1="495.5" y1="111.6" x2="484.8" y2="126.1"/>
+    <line x1="540.5" y1="154.4" x2="526.6" y2="165.7"/>
+  </g>
+
+  <!-- Scale labels -->
+  <g fill="#fff" font-family="Arial,sans-serif" font-weight="800" text-anchor="middle">
+    <text x="110.0" y="170.0" font-size="27">1</text>
+    <text x="155.2" y="114.7" font-size="27">1.5</text>
+    <text x="212.8" y="72.5" font-size="27">2</text>
+    <text x="279.1" y="46.0" font-size="27">2.5</text>
+    <text x="350.0" y="37.0" font-size="27">3</text>
+    <text x="420.9" y="46.0" font-size="27">3.5</text>
+    <text x="487.2" y="72.5" font-size="27">4</text>
+    <text x="544.8" y="114.7" font-size="27">4.5</text>
+    <text x="590.0" y="170.0" font-size="27">5</text>
+  </g>
+
+  <text x="350" y="188" fill="#fff" font-size="44" font-family="Arial,sans-serif" font-weight="900" text-anchor="middle">SWR Meter</text>
+
+  <!-- Needle shares the exact same pivot and angular calibration as the scale -->
+  <g id="needleGroup" transform="rotate(-58.00 350 310)" style="transition:transform .45s ease">
+    <polygon points="350,310 342,304 350,66 358,304" fill="#ff2e22" stroke="#ff8b84" stroke-width="1.2" filter="url(#glow)"/>
+  </g>
+  <circle cx="350" cy="310" r="31" fill="#20252c" stroke="#a7a7a7" stroke-width="2"/>
+  <circle cx="350" cy="310" r="12" fill="#0a0d10" stroke="#555" stroke-width="2"/>
+</svg>
+
+<div class="digital-main">
+  <div class="label">VSWR</div>
+  <div class="value" id="meterVswr">1.00:1</div>
+</div>
+</div>
+</section>
+
+<section class="results">
+  <div class="result-box"><div class="name">Reflection Coefficient (Γ)</div><div class="value" id="gamma">0.000</div></div>
+  <div class="result-box"><div class="name">Reflected Power</div><div class="value" id="pct">0.0%</div><div class="subvalue" id="refWatts">(0.0 W)</div></div>
+  <div class="result-box"><div class="name">Delivered Power</div><div class="value" id="delivered">0.0 W</div><div class="subvalue">At Meter</div></div>
+  <div class="result-box"><div class="name">Return Loss</div><div class="value" id="rl">∞ dB</div></div>
+  <div class="result-box"><div class="name">Power Ratio<br>Fwd / Refl</div><div class="value" id="ratio">∞ : 1</div></div>
+  <div class="result-box"><div class="name">Match Efficiency</div><div class="value" id="efficiency">100.0%</div></div>
+  <div class="result-box"><div class="name">Mismatch Loss</div><div class="value" id="mismatch">0.00 dB</div></div>
+</section>
+
+<section class="feed">
+  <div class="feed-title">Optional Feed-Line Estimate (One-Way Loss)</div>
+  <div class="feed-grid">
+    <div class="select-field">
+      <label for="coaxType">Coax Type</label>
+      <select id="coaxType" onchange="updateCoaxMode()">
+        <option value="lmr400" selected>LMR-400</option>
+        <option value="manual">Manual loss entry</option>
+      </select>
+    </div>
+    <div class="select-field" id="lengthWrap">
+      <label for="coaxLength">Length (ft)</label>
+      <input id="coaxLength" type="number" inputmode="decimal" min="0" step="1" value="120">
+    </div>
+    <div class="select-field" id="freqWrap">
+      <label for="frequency">Frequency (MHz)</label>
+      <input id="frequency" type="number" inputmode="decimal" min="0" step="0.001" value="27.225">
+    </div>
+    <div class="select-field hidden" id="manualWrap">
+      <label for="lineLoss">One-Way Loss (dB)</label>
+      <input id="lineLoss" type="number" inputmode="decimal" min="0" step="0.01" value="0">
+    </div>
+    <div class="loss-box">
+      <div class="name">One-Way Loss (dB)</div>
+      <div class="value" id="calcLoss">0.00 dB</div>
+    </div>
+  </div>
+</section>
+
+<div class="note">“Delivered Power” is forward power minus reflected power at the meter location. It does not include feed-line loss.</div>
+</div>
+</main>
+
+<script>
+function clearZero(el){if(["0","0.0","0.00","0.000"].includes(el.value))el.value=""}
+function restoreZero(el){if(el.value.trim()==="")el.value="0"}
+function fmt(x,n=2){return Number.isFinite(x)?x.toFixed(n):"—"}
+
+const PX=350, PY=310;
+const SWR_MIN=1.0, SWR_MAX=5.0;
+const ANGLE_MIN=-58.0, ANGLE_MAX=58.0;
+
+function swrToAngle(swr){
+  const v=Math.max(SWR_MIN,Math.min(SWR_MAX,swr));
+  return ANGLE_MIN + ((v-SWR_MIN)/(SWR_MAX-SWR_MIN))*(ANGLE_MAX-ANGLE_MIN);
+}
+
+function setMeter(swr){
+  const v=Number.isFinite(swr)?Math.max(SWR_MIN,swr):SWR_MIN;
+  const shown=Math.min(v,SWR_MAX);
+  document.getElementById("needleGroup")
+    .setAttribute("transform",`rotate(${swrToAngle(shown)} ${PX} ${PY})`);
+  document.getElementById("meterVswr").textContent=fmt(v,2)+":1";
+}
+
+function lmr400LossDb(lengthFt,freqMHz){
+  const pts=[[1,.10],[10,.39],[30,.67],[50,.88],[100,1.27],[150,1.57],[220,1.92],[450,2.73],[900,3.90],[1500,5.05],[2500,6.65]];
+  let lp100;
+  if(freqMHz<=pts[0][0]) lp100=pts[0][1]*Math.sqrt(freqMHz/pts[0][0]);
+  else if(freqMHz>=pts[pts.length-1][0]){
+    const a=pts[pts.length-2],b=pts[pts.length-1];
+    const t=(Math.log(freqMHz)-Math.log(a[0]))/(Math.log(b[0])-Math.log(a[0]));
+    lp100=a[1]+t*(b[1]-a[1]);
+  }else{
+    for(let i=0;i<pts.length-1;i++){
+      const a=pts[i],b=pts[i+1];
+      if(freqMHz>=a[0]&&freqMHz<=b[0]){
+        const t=(Math.log(freqMHz)-Math.log(a[0]))/(Math.log(b[0])-Math.log(a[0]));
+        lp100=a[1]+t*(b[1]-a[1]);break;
+      }
+    }
+  }
+  return lp100*(lengthFt/100);
+}
+
+function calculate(){
+  const pf=parseFloat(document.getElementById("forward").value);
+  const pr=parseFloat(document.getElementById("reflected").value);
+  if(!Number.isFinite(pf)||!Number.isFinite(pr)||pf<=0||pr<0||pr>=pf){
+    alert("Enter valid values: forward power must be greater than 0 W, and reflected power must be less than forward power.");
+    return;
+  }
+
+  const frac=pr/pf;
+  const gamma=Math.sqrt(frac);
+  const swr=(1+gamma)/(1-gamma);
+  const reflectedPct=frac*100;
+  const delivered=pf-pr;
+  const rl=gamma===0?Infinity:-20*Math.log10(gamma);
+  const efficiency=(1-frac)*100;
+  const mismatch=-10*Math.log10(1-frac);
+
+  document.getElementById("gamma").textContent=fmt(gamma,3);
+  document.getElementById("pct").textContent=fmt(reflectedPct,1)+"%";
+  document.getElementById("refWatts").textContent="("+fmt(pr,1)+" W)";
+  document.getElementById("delivered").textContent=fmt(delivered,1)+" W";
+  document.getElementById("rl").textContent=(gamma===0?"∞":fmt(rl,1))+" dB";
+  document.getElementById("ratio").textContent=pr===0?"∞ : 1":fmt(pf/pr,1)+" : 1";
+  document.getElementById("efficiency").textContent=fmt(efficiency,1)+"%";
+  document.getElementById("mismatch").textContent=fmt(mismatch,2)+" dB";
+
+  setMeter(swr);
+
+  let lossDb=0;
+  if(document.getElementById("coaxType").value==="lmr400"){
+    const len=parseFloat(document.getElementById("coaxLength").value);
+    const f=parseFloat(document.getElementById("frequency").value);
+    if(Number.isFinite(len)&&len>=0&&Number.isFinite(f)&&f>0)lossDb=lmr400LossDb(len,f);
+  }else{
+    const manual=parseFloat(document.getElementById("lineLoss").value);
+    if(Number.isFinite(manual)&&manual>=0)lossDb=manual;
+  }
+  document.getElementById("calcLoss").textContent=fmt(lossDb,2)+" dB";
+}
+
+function updateCoaxMode(){
+  const manual=document.getElementById("coaxType").value==="manual";
+  document.getElementById("lengthWrap").classList.toggle("hidden",manual);
+  document.getElementById("freqWrap").classList.toggle("hidden",manual);
+  document.getElementById("manualWrap").classList.toggle("hidden",!manual);
+}
+
+function resetAll(){
+  document.getElementById("forward").value="0";
+  document.getElementById("reflected").value="0";
+  document.getElementById("coaxType").value="lmr400";
+  document.getElementById("coaxLength").value="120";
+  document.getElementById("frequency").value="27.225";
+  document.getElementById("lineLoss").value="0";
+  updateCoaxMode();
+
+  document.getElementById("gamma").textContent="0.000";
+  document.getElementById("pct").textContent="0.0%";
+  document.getElementById("refWatts").textContent="(0.0 W)";
+  document.getElementById("delivered").textContent="0.0 W";
+  document.getElementById("rl").textContent="∞ dB";
+  document.getElementById("ratio").textContent="∞ : 1";
+  document.getElementById("efficiency").textContent="100.0%";
+  document.getElementById("mismatch").textContent="0.00 dB";
+  document.getElementById("calcLoss").textContent="0.00 dB";
+  setMeter(1.0);
+}
+window.addEventListener("DOMContentLoaded",resetAll);
+window.addEventListener("pageshow",resetAll);
+</script>
+</body>
+</html>
